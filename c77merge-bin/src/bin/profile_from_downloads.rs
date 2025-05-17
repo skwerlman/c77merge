@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
 
     let cli_span = trace_span!("cli").entered();
     let cli = Cli::parse();
-    trace!("cli: {:?}", cli);
+    trace!("cli: {cli:?}");
     cli_span.exit();
 
     let config_span = trace_span!("configs").entered();
@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
     trace!("config: {:?}", settings.mask_api_key());
 
     let games = get_games(&settings)?;
-    trace!("games: {:?}", games);
+    trace!("games: {games:?}");
 
     let game = games
         .iter()
@@ -80,7 +80,7 @@ async fn main() -> Result<()> {
     let (mod_hashes, errors) = hash_all_in_dir(game_downloads.as_path())?;
 
     if errors.has_errors() {
-        error!("{}", errors);
+        error!("{errors}");
     }
 
     let h = hash_span.exit();
@@ -169,7 +169,7 @@ async fn main() -> Result<()> {
     info!("Writing profile...");
 
     fs::write(profile_file, mod_profile_toml)
-        .map_err(|e| miette!("Failed to write profile: {}", e))?;
+        .map_err(|e| miette!("Failed to write profile: {e}"))?;
     write_span.exit();
 
     profile_span.exit();
@@ -197,14 +197,14 @@ fn mod_entry_from_md5_lookup(game_base: &Path, lookup: Md5LookupResult) -> ModIn
                 "Could not find the archive for '{}'! Was it renamed?",
                 lookup.mod_details.name
             );
-            debug!("Looked at: {:?}", archive_path);
+            debug!("Looked at: {archive_path:?}");
         }
         Err(e) => {
             error!(
-                "Could not find the archive for '{}': {}",
-                lookup.mod_details.name, e
+                "Could not find the archive for '{}': {e}",
+                lookup.mod_details.name
             );
-            debug!("Looked at: {:?}", archive_path);
+            debug!("Looked at: {archive_path:?}");
         }
     }
 
@@ -217,14 +217,14 @@ fn mod_entry_from_md5_lookup(game_base: &Path, lookup: Md5LookupResult) -> ModIn
                 "Could not find the unpacked mod directory for '{}'! Was it renamed?",
                 lookup.mod_details.name
             );
-            debug!("Looked at: {:?}", unpacked_path);
+            debug!("Looked at: {unpacked_path:?}");
         }
         Err(e) => {
             error!(
-                "Could not find the unpacked mod directory for '{}': {}",
-                lookup.mod_details.name, e
+                "Could not find the unpacked mod directory for '{}': {e}",
+                lookup.mod_details.name
             );
-            debug!("Looked at: {:?}", unpacked_path);
+            debug!("Looked at: {unpacked_path:?}");
         }
     }
 
@@ -237,11 +237,11 @@ fn mod_entry_from_md5_lookup(game_base: &Path, lookup: Md5LookupResult) -> ModIn
 }
 
 fn error_report(err: &dyn Error) {
-    let mut s = format!("{}\n{:?}", err, err);
+    let mut s = format!("{err}\n{err:?}");
     let mut err: &(dyn Error) = err;
     while let Some(src) = err.source() {
-        let _ = write!(s, "\n\nCaused by: {}\n{:?}", src, src);
+        let _ = write!(s, "\n\nCaused by: {src}\n{src:?}");
         err = src;
     }
-    error!("{}", s);
+    error!("{s}");
 }

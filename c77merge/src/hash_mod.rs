@@ -14,7 +14,7 @@ use crate::error::{C77Error, HashErrors};
 
 #[instrument(level = "trace")]
 fn hash_mod(path: &PathBuf) -> Result<String, C77Error> {
-    info!("Hashing {:?}", path);
+    info!("Hashing {path:?}");
     let mut file = File::open(path)?;
     let mut hasher = Md5::new();
     io::copy(&mut file, &mut hasher)?;
@@ -35,7 +35,7 @@ pub fn hash_all_in_dir(path: &Path) -> Result<(Vec<String>, HashErrors), C77Erro
     // save errors in the errors vec, we'll handle them later
     let mod_hashes: Vec<String> = dld
         // .into_diagnostic()
-        .map_err(|e| miette!("Could not read directory {}: {}", &path.display(), e))?
+        .map_err(|e| miette!("Could not read directory {}: {e}", &path.display()))?
         .collect::<Vec<_>>()
         // uses rayon to hash in parallel
         .into_par_iter()
@@ -46,10 +46,10 @@ pub fn hash_all_in_dir(path: &Path) -> Result<(Vec<String>, HashErrors), C77Erro
                         let hash = hash_mod(&p);
                         match hash {
                             Ok(ref h) => {
-                                debug!("hash: {}", h);
+                                debug!("hash: {h}");
                             }
                             Err(_) => {
-                                debug!("hash: {:?}", hash);
+                                debug!("hash: {hash:?}");
                             }
                         };
                         hash

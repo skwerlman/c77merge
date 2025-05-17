@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
 
     let cli_span = trace_span!("cli").entered();
     let cli = Cli::parse();
-    trace!("cli: {:?}", cli);
+    trace!("cli: {cli:?}");
     cli_span.exit();
 
     let config_span = trace_span!("configs").entered();
@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
     trace!("config: {:?}", settings.mask_api_key());
 
     let games = get_games(&settings)?;
-    trace!("games: {:?}", games);
+    trace!("games: {games:?}");
 
     let game = Arc::new(
         games
@@ -57,10 +57,10 @@ async fn main() -> Result<()> {
             .find(|g| g.aliases.contains(&cli.game))
             .ok_or_else(|| miette!("Game not found"))?,
     );
-    trace!("game: {:?}", game);
+    trace!("game: {game:?}");
 
     let profile: Arc<ModProfile> = Arc::new(get_mod_profile(&settings, &game, &cli.profile)?);
-    trace!("profile: {:?}", profile);
+    trace!("profile: {profile:?}");
 
     config_span.exit();
 
@@ -84,20 +84,20 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
         .clone()
         .join("root/steamapps/")
         .join(format!("appmanifest_{}.acf", game.steamid));
-    debug!("acf file for game: {:?}", acf_file);
+    debug!("acf file for game: {acf_file:?}");
 
-    let acf_handle = File::open(acf_file).map_err(|e| miette!("ACF Read error: {}", e))?;
+    let acf_handle = File::open(acf_file).map_err(|e| miette!("ACF Read error: {e}"))?;
     let mut stream = StructuredAcfTokenStream::new(AcfTokenStream::new(acf_handle));
     let path = vec!["AppState", "installdir"];
     stream
         .select_path(&path)
-        .map_err(|e| miette!("ACF Parse error: {}", e))?;
+        .map_err(|e| miette!("ACF Parse error: {e}"))?;
     let installdir = match stream
         .expect_next()
-        .map_err(|e| miette!("ACF Parse error: {}", e))
+        .map_err(|e| miette!("ACF Parse error: {e}"))
     {
         Ok(AcfToken::String(dir)) => Ok(dir),
-        Ok(t) => Err(miette!("ACF Parse error: Unexpected token: {:?}", t)),
+        Ok(t) => Err(miette!("ACF Parse error: Unexpected token: {t:?}")),
         Err(e) => Err(e),
     }?;
 
@@ -108,7 +108,7 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
         .join("root/steamapps/common/")
         .join(installdir);
 
-    debug!("game_dir: {:?}", game_dir);
+    debug!("game_dir: {game_dir:?}");
 
     Ok(())
 }

@@ -27,5 +27,5 @@ pub fn format_elapsed(elapsed: Duration) -> String {
             }
         }
     }
-    format!("{} {}", time, unit)
+    format!("{time} {unit}")
 }

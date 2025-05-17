@@ -37,7 +37,7 @@ impl FileListing {
                 return Some(file);
             }
             // no information about the file
-            warn!("File with ID {} not found", file_id);
+            warn!("File with ID {file_id} not found");
             return None;
         }
 

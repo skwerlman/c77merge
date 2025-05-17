@@ -36,19 +36,19 @@ impl Limiter {
             .map(|hv| {
                 hv.to_str()
                     .unwrap_or_else(|v| {
-                        debug!("faulty header: {} -> {:?}", header, v);
+                        debug!("faulty header: {header} -> {v:?}");
                         debug!("replacing bad header value with empty string");
                         "" // return an empty str. this gets caught by parse
                     })
                     .parse()
                     .unwrap_or_else(|v| {
-                        debug!("faulty header: {} -> {:?}", header, v);
-                        warn!("invalid header: {}", header);
+                        debug!("faulty header: {header} -> {v:?}");
+                        warn!("invalid header: {header}");
                         default.clone()
                     })
             })
             .unwrap_or_else(|| {
-                debug!("missing header: {}", header);
+                debug!("missing header: {header}");
                 default
             })
     }
@@ -84,7 +84,7 @@ impl Limiter {
         };
 
         debug!("initialized rate limiter");
-        trace!("{:?}", limiter);
+        trace!("{limiter:?}");
 
         limiter
     }
@@ -103,7 +103,7 @@ impl Limiter {
             Self::limit_from_header(headers, "x-rl-hourly-reset", self.hourly_reset);
         self.daily_reset = Self::limit_from_header(headers, "x-rl-daily-reset", self.daily_reset);
 
-        trace!("refreshed limits: {:?}", self);
+        trace!("refreshed limits: {self:?}");
 
         self
     }

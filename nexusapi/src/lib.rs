@@ -125,13 +125,13 @@ pub async fn login(
             userinfo = info;
         }
         NexusValidateResult::InvalidKey(error) => {
-            error!("{}", error);
+            error!("{error}");
             return Err(error);
         }
     };
 
     info!("Logged in to nexus as {}", userinfo.name);
-    trace!("userinfo: {:?}", userinfo);
+    trace!("userinfo: {userinfo:?}");
 
     Ok((api_client, userinfo, limiter))
 }
@@ -152,7 +152,7 @@ async fn validate<const VALID_DOMAIN: bool>(
     } else if resp.status().is_client_error() {
         Ok(NexusValidateResult::InvalidKey(resp.json().await?))
     } else {
-        Err(format!("unexpected response from api: {:?}", resp).into())
+        Err(format!("unexpected response from api: {resp:?}").into())
     }
 }
 
@@ -203,13 +203,13 @@ pub async fn get_by_hash(client: NexusClient<true, true>, hash: String) -> Resul
     for l in lookups {
         if let Some(ref newest) = lookup {
             if newest.file_details.file_id < l.file_details.file_id {
-                trace!("taking newer: {:?}", l);
+                trace!("taking newer: {l:?}");
                 lookup = Some(l);
             } else {
-                trace!("keeping: {:?}", newest)
+                trace!("keeping: {newest:?}")
             }
         } else {
-            trace!("starting with: {:?}", l);
+            trace!("starting with: {l:?}");
             lookup = Some(l);
         }
     }

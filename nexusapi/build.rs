@@ -77,7 +77,7 @@ fn main() {
 
     let rust_vsn;
     if let Some((rust_maj, rust_min, rust_patch)) = rustc::triple() {
-        rust_vsn = format!("{}.{}.{}", rust_maj, rust_min, rust_patch);
+        rust_vsn = format!("{rust_maj}.{rust_min}.{rust_patch}");
     } else {
         println!("cargo::error=Unable to determine Rust version");
         exit(1);
@@ -85,17 +85,10 @@ fn main() {
     let reqwest_vsn = vsn_info.get("reqwest").unwrap();
 
     let user_agent = format!(
-        "{}/{}{} ({} {}) Rust/{} reqwest/{}",
-        package_name,
-        package_vsn,
-        profile_suffix,
-        platform_os,
-        platform_arch,
-        rust_vsn,
-        reqwest_vsn
+        "{package_name}/{package_vsn}{profile_suffix} ({platform_os} {platform_arch}) Rust/{rust_vsn} reqwest/{reqwest_vsn}"
     );
 
-    let code = format!("const USER_AGENT: &str = \"{}\";", user_agent);
+    let code = format!("const USER_AGENT: &str = \"{user_agent}\";");
 
     fs::write(&dest_path, code).unwrap();
 }
