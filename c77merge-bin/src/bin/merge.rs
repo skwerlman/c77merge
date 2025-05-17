@@ -120,5 +120,29 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
 
     debug!("game_dir: {game_dir:?}");
 
+    let tree = build_tree(settings, game, profile, game_dir)?;
     Ok(())
+}
+
+fn build_tree(
+    config: &Configuration,
+    game: &Game,
+    profile: &ModProfile,
+    mountpoint: PathBuf,
+) -> Result<OVFSTree> {
+    let overwrite = game.overwrite_dir();
+    let mut tree = OVFSTree::new(mountpoint.clone(), game.work_dir(), overwrite);
+
+    // mods are added in order; 1st in config is topmost
+    for mod_ in &profile.mods {
+        let path = game.mods_dir().join(&mod_.unpacked);
+        tree.with_lower(path);
+    }
+
+    // set lowest dir to the directory we are gonna shadow
+    tree.with_lower(mountpoint);
+
+    info!("{tree:?}");
+
+    Ok(tree)
 }
