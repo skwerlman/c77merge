@@ -9,15 +9,14 @@ use std::fs;
 use std::path::PathBuf;
 
 use config::{Config, FileFormat};
+use serde::Deserialize;
 use tracing::{instrument, trace};
 
 use config_error::ConfigError;
-use general::GeneralConf;
-use nexus::NexusConf;
-
 use game::{Game, Games};
+use general::GeneralConf;
 use mod_profile::ModProfile;
-use serde::Deserialize;
+use nexus::NexusConf;
 
 pub type Result<T> = std::result::Result<T, ConfigError>;
 
