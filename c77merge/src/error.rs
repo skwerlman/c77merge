@@ -6,7 +6,7 @@ use thiserror::Error;
 #[derive(Error, Debug, Diagnostic)]
 pub enum C77Error {
     #[error(transparent)]
-    #[diagnostic(code(my_lib::io_error))]
+    #[diagnostic(code(c77merge::io_error))]
     HashError(#[from] io::Error),
 
     #[error("{0}")]
