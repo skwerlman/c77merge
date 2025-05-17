@@ -1,0 +1,19 @@
+[package]
+name = "c77merge"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "c77merge"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+rayon = "1.10"
+md-5 = "0.10"
+miette = { version = "7.6", features = ["fancy"] }
+base16ct = { version = "0.2", features = ["std", "alloc"] }
+shellexpand = { version = "3.1", features = ["full"] }
+# tokio = { version = "1.42", features = ["full"] }
+thiserror = "2.0"
+tracing = "0.1"

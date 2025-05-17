@@ -1,0 +1,5 @@
+[workspace]
+package.edition = "2024"
+package.license = "MIT"
+resolver = "3"
+members = ['acf', "c77conf", 'c77merge', 'c77merge-bin', 'nexusapi', 'ovfs']

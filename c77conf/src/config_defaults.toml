@@ -1,0 +1,12 @@
+[general]
+modding_root = "~/Games/Mods"
+steam_root = "~/.steam"
+
+[nexus]
+forbid_http = true
+verbose_connection = false
+enable_compression = true
+connect_timeout = 3000
+read_timeout = 1500
+timeout = 5000
+cache_path = "~/.cache/c77merge/http-cache"
