@@ -70,14 +70,9 @@ async fn main() -> Result<()> {
     let api_future = tokio::task::spawn(login(settings));
     let login_span = login_span.exit();
 
-    let mut game_downloads = game.path.clone();
-    game_downloads.push("Download");
-    let mut game_mods = game.path.clone();
-    game_mods.push("Mods");
-
     let hash_span = trace_span!("hash").entered();
 
-    let (mod_hashes, errors) = hash_all_in_dir(game_downloads.as_path())?;
+    let (mod_hashes, errors) = hash_all_in_dir(game.download_dir().as_path())?;
 
     if errors.has_errors() {
         error!("{errors}");
@@ -161,14 +156,11 @@ async fn main() -> Result<()> {
     let mod_profile = ModProfile { profile, mods };
 
     let write_span = trace_span!("write profile").entered();
-    let mod_profile_toml = mod_profile.as_toml()?;
-
-    let mut profile_file = game.path.clone();
-    profile_file.push(Path::new(&mod_profile.profile.name).with_extension("toml"));
+    let profile_file = game.profile(&mod_profile.profile.name);
 
     info!("Writing profile...");
 
-    fs::write(profile_file, mod_profile_toml)
+    fs::write(profile_file, mod_profile.as_toml()?)
         .map_err(|e| miette!("Failed to write profile: {e}"))?;
     write_span.exit();
 

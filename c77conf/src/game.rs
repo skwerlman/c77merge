@@ -20,6 +20,20 @@ impl Game {
         self.path = shellexpand::path::tilde(&path).into();
         self
     }
+
+    pub fn download_dir(&self) -> PathBuf {
+        self.path.join("Download")
+    }
+    pub fn mods_dir(&self) -> PathBuf {
+        self.path.join("Mods")
+    }
+    pub fn overwrite_dir(&self) -> PathBuf {
+        self.path.join("Overwrite")
+    }
+
+    pub fn profile(&self, name: &str) -> PathBuf {
+        self.path.join(name).with_extension("toml")
+    }
 }
 
 // hack to unwrap games

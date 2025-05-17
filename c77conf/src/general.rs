@@ -4,14 +4,14 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GeneralConf {
-    #[serde(deserialize_with = "deserialize_root")]
+    #[serde(deserialize_with = "deserialize_path")]
     pub modding_root: PathBuf,
-    #[serde(deserialize_with = "deserialize_root")]
+    #[serde(deserialize_with = "deserialize_path")]
     pub steam_root: PathBuf,
 }
 
-// override modding_root deserialization to expand path
-fn deserialize_root<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
+// override deserialization to expand string to absolute path
+fn deserialize_path<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
