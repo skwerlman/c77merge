@@ -3,27 +3,31 @@ name = "c77merge-bin"
 version = "0.1.0"
 edition.workspace = true
 
-# [[bin]]
-# name = "updatemods"
+[features]
+default = ["build-updatemods", "build-merge", "build-profile_from_downloads"]
+build-updatemods = []
+build-merge = ["acf", "ovfs"]
+build-profile_from_downloads = ["nexusapi", "futures", "itertools"]
+
+[[bin]]
+name = "updatemods"
+required-features = ["build-updatemods"]
 
 [[bin]]
 name = "merge"
+required-features = ["build-merge"]
+
+[[bin]]
+name = "profile_from_downloads"
+required-features = ["build-profile_from_downloads"]
 
 [dependencies]
-acf = { version = "0.1", path = "../acf" }
 c77conf = { version = "0.1", path = "../c77conf" }
 c77merge = { version = "0.1", path = "../c77merge" }
-nexusapi = { version = "0.1", path = "../nexusapi" }
-ovfs = { version = "0.1", path = "../ovfs" }
+
 clap = { version = "4.5", features = ["derive", "wrap_help", "unicode"] }
-# env_logger = "0.11"
-futures = "0.3"
 human-panic = "2.0"
 miette = { version = "7.6", features = ["fancy"] }
-itertools = "0.8"
-# log = "0.4"
-# pot = "3.0" # for saving state
-# termtree = "0.5" # tree of any type
 tokio = { version = "1.42", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = [
@@ -31,3 +35,9 @@ tracing-subscriber = { version = "0.3", features = [
     "env-filter",
     "local-time",
 ] }
+
+acf = { version = "0.1", path = "../acf", optional = true }
+nexusapi = { version = "0.1", path = "../nexusapi", optional = true }
+ovfs = { version = "0.1", path = "../ovfs", optional = true }
+futures = { version = "0.3", optional = true }
+itertools = { version = "0.14", optional = true }
