@@ -7,7 +7,7 @@ use tracing::{debug, info, instrument, trace, trace_span};
 use tracing_subscriber::fmt::{format, format::FmtSpan};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
-use acf::{AcfTokenStream, StructuredAcfTokenStream};
+use acf::{AcfToken, AcfTokenStream, StructuredAcfTokenStream};
 use c77conf::game::Game;
 use c77conf::mod_profile::ModProfile;
 use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
@@ -92,10 +92,23 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
     stream
         .select_path(&path)
         .map_err(|e| miette!("ACF Parse error: {}", e))?;
-    let installdir = stream
+    let installdir = match stream
         .expect_next()
-        .map_err(|e| miette!("ACF Parse error: {}", e))?;
-    debug!("installdir: {:?}", installdir);
+        .map_err(|e| miette!("ACF Parse error: {}", e))
+    {
+        Ok(AcfToken::String(dir)) => Ok(dir),
+        Ok(t) => Err(miette!("ACF Parse error: Unexpected token: {:?}", t)),
+        Err(e) => Err(e),
+    }?;
+
+    let game_dir = settings
+        .general
+        .steam_root
+        .clone()
+        .join("root/steamapps/common/")
+        .join(installdir);
+
+    debug!("game_dir: {:?}", game_dir);
 
     Ok(())
 }
