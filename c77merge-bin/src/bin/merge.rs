@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::sync::Arc;
 
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand};
 use miette::{Result, miette};
 use tracing::{debug, info, instrument, trace, trace_span};
 use tracing_subscriber::fmt::{format, format::FmtSpan};
@@ -14,15 +14,20 @@ use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
 
 #[derive(Parser, Debug, Clone)]
 struct Cli {
-    mode: OVFSMode,
     game: String,
     profile: String,
+    #[command(subcommand)]
+    mode: OVFSMode,
 }
 
-#[derive(Debug, ValueEnum, Clone, Copy)]
+#[derive(Debug, Subcommand, Clone)]
 enum OVFSMode {
     Enable,
     Disable,
+    Wrap {
+        #[clap(raw = true, required = true, last = false)]
+        command: Vec<String>,
+    },
 }
 
 #[tokio::main]
@@ -30,6 +35,7 @@ async fn main() -> Result<()> {
     human_panic::setup_panic!();
     let format = format::format().pretty();
     let filter = EnvFilter::try_from_env("C77_LOG").unwrap_or_else(|_| EnvFilter::new("debug"));
+
     fmt()
         .event_format(format)
         .with_env_filter(filter)
@@ -70,6 +76,10 @@ async fn main() -> Result<()> {
             // info!("Modlist merged onto: {}", merged_into.display())
         }
         OVFSMode::Disable => {}
+        OVFSMode::Wrap { command: cmd } => {
+            // let merged_into = wrap(&settings, &game, &profile);
+            // info!("Modlist merged onto: {}", merged_into.display())
+        }
     }
 
     main_span.exit();
