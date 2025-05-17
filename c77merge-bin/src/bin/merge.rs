@@ -142,7 +142,5 @@ fn build_tree(
     // set lowest dir to the directory we are gonna shadow
     tree.with_lower(mountpoint);
 
-    info!("{tree:?}");
-
     Ok(tree)
 }
