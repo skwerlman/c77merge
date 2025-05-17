@@ -5,6 +5,7 @@ use rustix::thread::{self, UnshareFlags};
 
 pub use error::OVFSError;
 use id::Id;
+use tracing::{instrument, trace};
 
 mod error;
 mod id;
@@ -13,6 +14,7 @@ pub mod ovfs;
 type Result<T> = std::result::Result<T, OVFSError>;
 
 // sets up a user namespace and returns who we used to be
+#[instrument(level = "trace")]
 pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
     let me = Id::me();
 
@@ -40,4 +42,15 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
     drop(gid_mapping);
 
     Ok(me)
+}
+
+#[instrument(level = "trace", skip(tree))]
+pub fn mount(tree: OVFSTree) -> Result<()> {
+    let (upper, lower, work, mount) = tree.overlayfs_spec();
+    trace!("upper: {upper}");
+    trace!("lower: {lower}");
+    trace!("work: {work}");
+    trace!("mount: {mount}");
+
+    Ok(())
 }
