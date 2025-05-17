@@ -24,7 +24,7 @@ impl OVFSTree {
         }
     }
 
-    pub fn with_lower(mut self, lower: PathBuf) {
+    pub fn with_lower(&mut self, lower: PathBuf) {
         let bottom = self.upper.as_mut().last();
         bottom.put_child(lower);
     }
