@@ -1,5 +1,6 @@
 use std::{fs::File, io::Write};
 
+use ovfs::OVFSTree;
 use rustix::thread::{self, UnshareFlags};
 
 pub use error::OVFSError;
