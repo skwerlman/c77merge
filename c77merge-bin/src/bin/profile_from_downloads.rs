@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
 
     let config_span = trace_span!("configs").entered();
     let settings: Arc<Configuration> = Arc::new(get_main_config()?);
-    trace!("config: {:?}", settings);
+    trace!("config: {:?}", settings.mask_api_key());
 
     let games = get_games(&settings)?;
     trace!("games: {:?}", games);

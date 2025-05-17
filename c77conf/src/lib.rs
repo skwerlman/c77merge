@@ -27,6 +27,18 @@ pub struct Configuration {
     pub nexus: NexusConf,
 }
 
+impl Configuration {
+    pub fn mask_api_key(&self) -> Self {
+        let mut nexus = self.nexus.clone();
+        nexus.api_key = "MASKED".to_string();
+
+        Self {
+            general: self.general.clone(),
+            nexus,
+        }
+    }
+}
+
 #[instrument(level = "trace")]
 pub fn get_main_config() -> Result<Configuration> {
     let config_base = match var("XDG_CONFIG_HOME") {
