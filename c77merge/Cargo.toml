@@ -14,6 +14,7 @@ md-5 = "0.10"
 miette = { version = "7.6", features = ["fancy"] }
 base16ct = { version = "0.2", features = ["std", "alloc"] }
 shellexpand = { version = "3.1", features = ["full"] }
+parking_lot = "0.12"
 # tokio = { version = "1.42", features = ["full"] }
 thiserror = "2.0"
 tracing = "0.1"

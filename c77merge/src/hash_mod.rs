@@ -2,11 +2,11 @@ use std::{
     fs::{File, read_dir},
     io,
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
 use md5::{Digest, Md5};
 use miette::miette;
+use parking_lot::Mutex;
 use rayon::prelude::*;
 use tracing::{Span, debug, info, instrument};
 
@@ -60,15 +60,14 @@ pub fn hash_all_in_dir(path: &Path) -> Result<(Vec<String>, HashErrors), C77Erro
         .into_par_iter()
         .filter_map(|d| {
             d.map_err(|e| {
-                if let Ok(mut errs) = err_mut.lock() {
-                    errs.push(e);
-                }
+                let mut errs = err_mut.lock();
+                errs.push(e);
             })
             .ok()
         })
         .collect();
 
-    let errors = err_mut.into_inner().unwrap().into();
+    let errors = err_mut.into_inner().into();
 
     Ok((mod_hashes, errors))
 }
