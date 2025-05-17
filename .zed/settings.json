@@ -8,6 +8,11 @@
       },
       "procMacro": {
         "enable": true
+      },
+      "initialization_options": {
+        "check": {
+          "command": "clippy"
+        }
       }
     }
   }
