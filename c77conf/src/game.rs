@@ -30,6 +30,9 @@ impl Game {
     pub fn overwrite_dir(&self) -> PathBuf {
         self.path.join("Overwrite")
     }
+    pub fn work_dir(&self) -> PathBuf {
+        self.path.join(".ovfs")
+    }
 
     pub fn profile(&self, name: &str) -> PathBuf {
         self.path.join(name).with_extension("toml")
