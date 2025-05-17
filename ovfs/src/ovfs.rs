@@ -28,6 +28,29 @@ impl OVFSTree {
         let bottom = self.upper.as_mut().last();
         bottom.put_child(lower);
     }
+
+    pub fn overlayfs_spec(&self) -> (String, String, String, String) {
+        let work = self.work_directory.to_string_lossy().into_owned();
+        let mount = self.mountpoint.to_string_lossy().into_owned();
+        let upper = self.upper.path.to_string_lossy().into_owned();
+
+        let mut lowers = Vec::new();
+
+        for low in self
+            .upper
+            .child
+            .as_ref()
+            .expect("Top-level node had no children")
+            .clone()
+        {
+            let p = low.to_string_lossy().into_owned();
+            lowers.push(p);
+        }
+
+        let lower = lowers.join(":");
+
+        (upper, lower, work, mount)
+    }
 }
 
 enum MaybeLast<'a> {
