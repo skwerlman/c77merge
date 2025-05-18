@@ -28,8 +28,10 @@ enum OVFSMode {
     Enable,
     Disable,
     Wrap {
-        #[clap(raw = true, required = true, last = false)]
-        command: Vec<String>,
+        #[clap(required = true)]
+        command: String,
+        #[clap(raw = true, required = false, last = false)]
+        args: Vec<String>,
     },
 }
 
@@ -79,8 +81,10 @@ fn main() -> Result<()> {
             // info!("Modlist merged onto: {}", merged_into.display())
         }
         OVFSMode::Disable => {}
-        OVFSMode::Wrap { command: cmd } => {
-            // let merged_into = wrap(&settings, &game, &profile);
+        OVFSMode::Wrap {
+            command: cmd,
+            args: args,
+        } => {
             // info!("Modlist merged onto: {}", merged_into.display())
         }
     }
