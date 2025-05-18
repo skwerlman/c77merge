@@ -29,7 +29,7 @@ impl OVFSTree {
         bottom.put_child(lower);
     }
 
-    pub fn overlayfs_spec(&self) -> (String, String, String, String) {
+    pub fn overlayfs_spec(&self) -> (String, Vec<String>, String, String) {
         let work = self.work_directory.to_string_lossy().into_owned();
         let mount = self.mountpoint.to_string_lossy().into_owned();
         let upper = self.upper.path.to_string_lossy().into_owned();
@@ -47,9 +47,7 @@ impl OVFSTree {
             lowers.push(p);
         }
 
-        let lower = lowers.join(":");
-
-        (upper, lower, work, mount)
+        (upper, lowers, work, mount)
     }
 }
 

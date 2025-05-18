@@ -50,9 +50,9 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
 
 #[instrument(level = "trace", skip(tree))]
 pub fn mount(tree: OVFSTree) -> Result<()> {
-    let (upper, lower, work, mount) = tree.overlayfs_spec();
+    let (upper, lowers, work, mount) = tree.overlayfs_spec();
     trace!("upper: {upper}");
-    trace!("lower: {lower}");
+    trace!("lower: {lowers:?}");
     trace!("work: {work}");
     trace!("mount: {mount}");
 
