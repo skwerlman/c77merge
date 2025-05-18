@@ -4,7 +4,8 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 use miette::{Result, miette};
-use ovfs::ovfs::OVFSTree;
+use ovfs::{Id, ovfs::OVFSTree};
+use ovfs::{mount, unshare};
 use tracing::{debug, info, instrument, trace, trace_span};
 use tracing_subscriber::fmt::{format, format::FmtSpan};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
@@ -124,6 +125,12 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
     debug!("game_dir: {game_dir:?}");
 
     let tree = build_tree(settings, game, profile, game_dir)?;
+    let me = unshare(Id::root(), true)?;
+
+    mount(tree)?;
+
+    let _fake_root = unshare(me, false)?;
+
     Ok(())
 }
 
