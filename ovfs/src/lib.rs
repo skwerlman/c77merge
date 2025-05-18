@@ -29,14 +29,18 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
 
     // map our user to the provided Id
     let mut uid_map = File::options().write(true).open("/proc/self/uid_map")?;
-    let uid_mapping = format!("{} {} {}", me.raw_uid(), id.raw_uid(), 1);
+    let uid_mapping = format!("{} {} {}", id.raw_uid(), me.raw_uid(), 1);
     uid_map.write_all(uid_mapping.as_bytes())?;
     drop(uid_map);
     drop(uid_mapping);
 
+    let mut setgroup_policy = File::options().write(true).open("/proc/self/setgroups")?;
+    setgroup_policy.write_all("deny".as_bytes())?;
+    drop(setgroup_policy);
+
     // map our group to the provided Id
     let mut gid_map = File::options().write(true).open("/proc/self/gid_map")?;
-    let gid_mapping = format!("{} {} {}", me.raw_gid(), id.raw_gid(), 1);
+    let gid_mapping = format!("{} {} {}", id.raw_gid(), me.raw_gid(), 1);
     gid_map.write_all(gid_mapping.as_bytes())?;
     drop(gid_map);
     drop(gid_mapping);
