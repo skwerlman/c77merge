@@ -1,7 +1,14 @@
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, os::fd::AsFd};
 
 use ovfs::OVFSTree;
-use rustix::thread::{self, UnshareFlags};
+use rustix::{
+    fs,
+    mount::{
+        FsMountFlags, FsOpenFlags, MountAttrFlags, MoveMountFlags, fsconfig_create,
+        fsconfig_set_string, fsmount, fsopen, move_mount,
+    },
+    thread::{self, UnshareFlags},
+};
 
 pub use error::OVFSError;
 pub use id::Id;
@@ -55,6 +62,33 @@ pub fn mount(tree: OVFSTree) -> Result<()> {
     trace!("lower: {lowers:?}");
     trace!("work: {work}");
     trace!("mount: {mount}");
+
+    let fd = fsopen("overlay", FsOpenFlags::FSOPEN_CLOEXEC)?;
+
+    // configure and create the overlay
+    fsconfig_set_string(fd.as_fd(), "source", "overlay")?;
+    for lower in lowers {
+        fsconfig_set_string(fd.as_fd(), "lowerdir+", lower)?;
+    }
+    fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
+    fsconfig_set_string(fd.as_fd(), "workdir", work)?;
+    fsconfig_create(fd.as_fd())?;
+
+    // mount it
+    let mount_fd = fsmount(
+        fd.as_fd(),
+        FsMountFlags::FSMOUNT_CLOEXEC,
+        MountAttrFlags::empty(),
+    )?;
+
+    // move it to shadow the mount directory
+    move_mount(
+        mount_fd.as_fd(),
+        "",
+        fs::CWD,
+        mount.as_bytes(),
+        MoveMountFlags::MOVE_MOUNT_F_EMPTY_PATH,
+    )?;
 
     Ok(())
 }
