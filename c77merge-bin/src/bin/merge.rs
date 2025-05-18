@@ -66,6 +66,7 @@ async fn main() -> Result<()> {
             .ok_or_else(|| miette!("Game not found"))?,
     );
     trace!("game: {game:?}");
+    game.ensure_dirs()?;
 
     let profile: Arc<ModProfile> = Arc::new(get_mod_profile(&settings, &game, &cli.profile)?);
     trace!("profile: {profile:?}");
