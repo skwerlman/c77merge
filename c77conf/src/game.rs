@@ -1,8 +1,8 @@
-use std::path::PathBuf;
+use std::{fs::create_dir_all, path::PathBuf};
 
 use serde::Deserialize;
 
-use crate::Configuration;
+use crate::{Configuration, Result};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Game {
@@ -36,6 +36,15 @@ impl Game {
 
     pub fn profile(&self, name: &str) -> PathBuf {
         self.path.join(name).with_extension("toml")
+    }
+
+    pub fn ensure_dirs(&self) -> Result<()> {
+        self.path.try_exists()?;
+        create_dir_all(self.download_dir())?;
+        create_dir_all(self.mods_dir())?;
+        create_dir_all(self.overwrite_dir())?;
+        create_dir_all(self.work_dir())?;
+        Ok(())
     }
 }
 
