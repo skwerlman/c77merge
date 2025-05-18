@@ -4,7 +4,7 @@ use ovfs::OVFSTree;
 use rustix::thread::{self, UnshareFlags};
 
 pub use error::OVFSError;
-use id::Id;
+pub use id::Id;
 use tracing::{instrument, trace};
 
 mod error;
