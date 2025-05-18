@@ -124,7 +124,8 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
 
     debug!("game_dir: {game_dir:?}");
 
-    let tree = build_tree(settings, game, profile, game_dir)?;
+    let tree = build_tree(game, profile, game_dir)?;
+
     let me = unshare(Id::root(), true)?;
 
     mount(tree)?;
@@ -134,12 +135,7 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
     Ok(())
 }
 
-fn build_tree(
-    config: &Configuration,
-    game: &Game,
-    profile: &ModProfile,
-    mountpoint: PathBuf,
-) -> Result<OVFSTree> {
+fn build_tree(game: &Game, profile: &ModProfile, mountpoint: PathBuf) -> Result<OVFSTree> {
     let overwrite = game.overwrite_dir();
     let mut tree = OVFSTree::new(mountpoint.clone(), game.work_dir(), overwrite);
 
