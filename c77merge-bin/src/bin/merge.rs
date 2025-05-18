@@ -33,8 +33,7 @@ enum OVFSMode {
     },
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     human_panic::setup_panic!();
     let format = format::format().pretty();
     let filter = EnvFilter::try_from_env("C77_LOG").unwrap_or_else(|_| EnvFilter::new("debug"));
