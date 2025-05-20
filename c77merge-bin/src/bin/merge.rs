@@ -1,8 +1,9 @@
 use std::fs::File;
 use std::path::PathBuf;
+use std::process::Command;
 use std::sync::Arc;
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use miette::{Result, miette};
 use ovfs::{Id, ovfs::OVFSTree};
 use ovfs::{mount, unshare};
@@ -19,25 +20,15 @@ use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
 struct Cli {
     game: String,
     profile: String,
-    #[command(subcommand)]
-    mode: OVFSMode,
-}
-
-#[derive(Debug, Subcommand, Clone)]
-enum OVFSMode {
-    Enable,
-    Disable,
-    Wrap {
-        #[clap(required = true)]
-        command: String,
-        #[clap(raw = true, required = false, last = false)]
-        args: Vec<String>,
-    },
+    #[clap(required = true)]
+    command: String,
+    #[clap(raw = true, required = false, last = false)]
+    args: Vec<String>,
 }
 
 fn main() -> Result<()> {
     human_panic::setup_panic!();
-    let format = format::format().pretty();
+    let format = format::format().compact();
     let filter = EnvFilter::try_from_env("C77_LOG").unwrap_or_else(|_| EnvFilter::new("debug"));
 
     fmt()
@@ -75,19 +66,13 @@ fn main() -> Result<()> {
 
     config_span.exit();
 
-    match cli.mode {
-        OVFSMode::Enable => {
-            let merged_into = enable(&settings, &game, &profile);
-            // info!("Modlist merged onto: {}", merged_into.display())
-        }
-        OVFSMode::Disable => {}
-        OVFSMode::Wrap {
-            command: cmd,
-            args: args,
-        } => {
-            // info!("Modlist merged onto: {}", merged_into.display())
-        }
-    }
+    let enable_span = trace_span!("enable").entered();
+    enable(&settings, &game, &profile)?;
+    enable_span.exit();
+
+    let run_span = trace_span!("run").entered();
+    run(&cli.command, &cli.args)?;
+    run_span.exit();
 
     main_span.exit();
     Ok(())
@@ -152,4 +137,15 @@ fn build_tree(game: &Game, profile: &ModProfile, mountpoint: PathBuf) -> Result<
     tree.with_lower(mountpoint);
 
     Ok(tree)
+}
+
+fn run(command: &str, args: &[String]) -> Result<()> {
+    let mut child = Command::new(command)
+        .args(args.iter().map(|arg| arg.as_str()))
+        .spawn()
+        .map_err(|e| miette!("Command error: {e}"))?;
+
+    child.wait().map_err(|e| miette!("Command error: {e}"))?;
+
+    Ok(())
 }
