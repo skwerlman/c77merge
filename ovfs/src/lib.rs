@@ -12,7 +12,7 @@ use rustix::{
 
 pub use error::OVFSError;
 pub use id::Id;
-use tracing::{instrument, trace};
+use tracing::{debug, instrument, trace};
 
 mod error;
 mod id;
@@ -26,6 +26,7 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
     let me = Id::me();
 
     // create a new namespace allowing user mapping and maybe mounts
+    debug!("creating new namespace");
     let flags = UnshareFlags::NEWUSER
         | if with_mounts {
             UnshareFlags::NEWNS
@@ -35,6 +36,7 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
     thread::unshare(flags)?;
 
     // map our user to the provided Id
+    trace!("mapping user {} to {}", me.raw_uid(), id.raw_uid());
     let mut uid_map = File::options().write(true).open("/proc/self/uid_map")?;
     let uid_mapping = format!("{} {} {}", id.raw_uid(), me.raw_uid(), 1);
     uid_map.write_all(uid_mapping.as_bytes())?;
@@ -46,6 +48,7 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
     drop(setgroup_policy);
 
     // map our group to the provided Id
+    trace!("mapping group {} to {}", me.raw_gid(), id.raw_gid());
     let mut gid_map = File::options().write(true).open("/proc/self/gid_map")?;
     let gid_mapping = format!("{} {} {}", id.raw_gid(), me.raw_gid(), 1);
     gid_map.write_all(gid_mapping.as_bytes())?;
@@ -57,6 +60,7 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
 
 #[instrument(level = "trace", skip(tree))]
 pub fn mount(tree: OVFSTree) -> Result<()> {
+    debug!("mounting vfs");
     let (upper, lowers, work, mount) = tree.overlayfs_spec();
     trace!("upper: {upper}");
     trace!("lower: {lowers:?}");
