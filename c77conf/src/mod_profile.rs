@@ -6,7 +6,7 @@ use crate::Result;
 pub struct ModProfile {
     pub profile: Profile,
 
-    #[serde(rename = "mod")]
+    #[serde(rename = "mod", default)]
     pub mods: Vec<ModInfo>,
 }
 
