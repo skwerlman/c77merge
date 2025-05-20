@@ -4,7 +4,7 @@ use std::fs;
 use std::path::Path;
 use std::process::exit;
 
-extern crate version_check as rustc;
+use version_check as rustc;
 
 use convert_case::Casing;
 use serde::Deserialize;
