@@ -64,22 +64,25 @@ fn main() -> Result<()> {
     let profile: Arc<ModProfile> = Arc::new(get_mod_profile(&settings, &game, &cli.profile)?);
     trace!("profile: {profile:?}");
 
+    let game_dir = get_game_dir(&settings, &game)?;
     config_span.exit();
 
-    let enable_span = trace_span!("enable").entered();
-    enable(&settings, &game, &profile)?;
-    enable_span.exit();
+    let vfs_span = trace_span!("vfs").entered();
+    let tree = build_tree(&game, &profile, game_dir)?;
+    enter_vfs(tree)?;
 
-    let run_span = trace_span!("run").entered();
-    run(&cli.command, &cli.args)?;
+    let run_span = trace_span!("run_game").entered();
+    run_game(&cli.command, &cli.args)?;
     run_span.exit();
+
+    vfs_span.exit();
 
     main_span.exit();
     Ok(())
 }
 
-#[instrument(level = "trace", skip(settings, game, profile))]
-fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result<()> {
+#[instrument(level = "trace", skip(settings, game))]
+fn get_game_dir(settings: &Configuration, game: &Game) -> Result<PathBuf> {
     let acf_file = settings
         .general
         .steam_root
@@ -112,18 +115,12 @@ fn enable(settings: &Configuration, game: &Game, profile: &ModProfile) -> Result
 
     debug!("game_dir: {game_dir:?}");
 
-    let tree = build_tree(game, profile, game_dir)?;
-
-    let me = unshare(Id::root(), true)?;
-
-    mount(tree)?;
-
-    let _fake_root = unshare(me, false)?;
-
-    Ok(())
+    Ok(game_dir)
 }
 
+#[instrument(level = "trace", skip(game, profile))]
 fn build_tree(game: &Game, profile: &ModProfile, mountpoint: PathBuf) -> Result<OVFSTree> {
+    debug!("building vfs tree");
     let overwrite = game.overwrite_dir();
     let mut tree = OVFSTree::new(mountpoint.clone(), game.work_dir(), overwrite);
 
@@ -139,13 +136,27 @@ fn build_tree(game: &Game, profile: &ModProfile, mountpoint: PathBuf) -> Result<
     Ok(tree)
 }
 
-fn run(command: &str, args: &[String]) -> Result<()> {
+#[instrument(level = "trace", skip(tree))]
+fn enter_vfs(tree: OVFSTree) -> Result<()> {
+    debug!("entering vfs");
+    let me = unshare(Id::root(), true)?;
+
+    mount(tree)?;
+
+    let _fake_root = unshare(me, false)?;
+
+    Ok(())
+}
+
+fn run_game(command: &str, args: &[String]) -> Result<()> {
+    info!("Launching game...");
     let mut child = Command::new(command)
         .args(args.iter().map(|arg| arg.as_str()))
         .spawn()
         .map_err(|e| miette!("Command error: {e}"))?;
 
-    child.wait().map_err(|e| miette!("Command error: {e}"))?;
+    let status = child.wait().map_err(|e| miette!("Command error: {e}"))?;
+    info!("Game exited with status: {status}");
 
     Ok(())
 }
