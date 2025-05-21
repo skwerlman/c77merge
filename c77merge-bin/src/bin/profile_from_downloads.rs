@@ -174,13 +174,10 @@ async fn main() -> Result<()> {
 fn mod_entry_from_md5_lookup(game_base: &Path, lookup: Md5LookupResult) -> ModInfo {
     let id = lookup.mod_details.mod_id;
     let fid = lookup.file_details.file_id;
-    let unpacked = Path::new(&lookup.file_details.file_name)
-        .with_extension("")
-        .to_string_lossy()
-        .into();
-    let archive = lookup.file_details.file_name;
+    let unpacked = Path::new(&lookup.file_details.file_name).with_extension("");
+    let archive = Path::new(&lookup.file_details.file_name).into();
 
-    let archive_path = game_base.join("Download").join(Path::new(&archive));
+    let archive_path = game_base.join("Download").join(&archive);
 
     match archive_path.try_exists() {
         Ok(true) => { /* noop */ }

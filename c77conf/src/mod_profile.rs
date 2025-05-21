@@ -22,8 +22,10 @@ pub struct Profile {
 pub struct ModInfo {
     pub id: u32,
     pub fid: u32,
-    pub archive: String,
-    pub unpacked: String,
+    #[serde(deserialize_with = "crate::deserialize_path")]
+    pub archive: PathBuf,
+    #[serde(deserialize_with = "crate::deserialize_path")]
+    pub unpacked: PathBuf,
     #[serde(default, skip_serializing_if = "crate::empty_path")]
     #[serde(deserialize_with = "crate::deserialize_path")]
     pub child_dir: PathBuf,
