@@ -23,7 +23,7 @@ struct Cli {
     profile: String,
     #[clap(required = true)]
     command: String,
-    #[clap(raw = true, required = false, last = false)]
+    #[clap(raw = true, required = false)]
     args: Vec<String>,
 }
 
@@ -40,6 +40,8 @@ fn main() -> Result<()> {
         .init();
 
     let main_span = trace_span!("main").entered();
+
+    trace!("raw args: {:?}", std::env::args_os());
 
     let cli_span = trace_span!("cli").entered();
     let cli = Cli::parse();
@@ -81,6 +83,7 @@ fn main() -> Result<()> {
 
     let mut trees = Vec::new();
     for tgt in targets {
+        debug!("building vfs tree for {tgt:?}");
         trees.push(build_tree(&game, &profile, game_dir.join(&tgt), |m| {
             m.child_dir == tgt
         })?);
@@ -135,7 +138,6 @@ fn get_game_dir(settings: &Configuration, game: &Game) -> Result<PathBuf> {
     Ok(game_dir)
 }
 
-    debug!("building vfs tree");
 #[instrument(level = "trace", skip(game, profile, filter))]
 fn build_tree(
     game: &Game,
@@ -178,6 +180,8 @@ fn enter_vfs(trees: Vec<OVFSTree>) -> Result<()> {
 
 fn run_game(command: &str, args: &[String]) -> Result<()> {
     info!("Launching game...");
+    debug!("command: {command:?}");
+    debug!("args: {args:?}");
     let mut child = Command::new(command)
         .args(args.iter().map(|arg| arg.as_str()))
         .spawn()

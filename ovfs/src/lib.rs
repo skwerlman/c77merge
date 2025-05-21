@@ -64,22 +64,29 @@ pub fn mount(tree: OVFSTree, readonly: bool) -> Result<()> {
     trace!("work: {work}");
     trace!("mount: {mount}");
 
+    trace!("fsopen");
     let fd = fsopen("overlay", FsOpenFlags::FSOPEN_CLOEXEC)?;
 
     // configure and create the overlay
+    trace!("fsconfig_set_string source");
     fsconfig_set_string(fd.as_fd(), "source", "overlay")?;
     for lower in lowers {
+        trace!("fsconfig_set_string lowerdir+ {lower}");
         fsconfig_set_string(fd.as_fd(), "lowerdir+", lower)?;
     }
 
     if !readonly {
+        trace!("fsconfig_set_string upperdir {upper}");
         fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
+        trace!("fsconfig_set_string workdir {work}");
         fsconfig_set_string(fd.as_fd(), "workdir", work)?;
     }
 
+    trace!("fsconfig_create");
     fsconfig_create(fd.as_fd())?;
 
     // mount it
+    trace!("fsmount");
     let mount_fd = fsmount(
         fd.as_fd(),
         FsMountFlags::FSMOUNT_CLOEXEC,
@@ -87,6 +94,7 @@ pub fn mount(tree: OVFSTree, readonly: bool) -> Result<()> {
     )?;
 
     // move it to shadow the mount directory
+    trace!("move_mount");
     move_mount(
         mount_fd.as_fd(),
         "",
