@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use tracing::warn;
+
 #[derive(Debug, Clone)]
 pub struct OVFSTree {
     mountpoint: PathBuf,
@@ -25,8 +27,12 @@ impl OVFSTree {
     }
 
     pub fn with_lower(&mut self, lower: PathBuf) {
-        let bottom = self.upper.as_mut().last();
-        bottom.put_child(lower);
+        if let Ok(true) = lower.try_exists() {
+            let bottom = self.upper.as_mut().last();
+            bottom.put_child(lower);
+        } else {
+            warn!("Lower directory does not exist: {}", lower.display());
+        }
     }
 
     pub fn overlayfs_spec(&self) -> (String, Vec<String>, String, String) {
