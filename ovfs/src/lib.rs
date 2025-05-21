@@ -55,9 +55,10 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
 }
 
 #[instrument(level = "trace", skip(tree))]
-pub fn mount(tree: OVFSTree) -> Result<()> {
+pub fn mount(tree: OVFSTree, readonly: bool) -> Result<()> {
     debug!("mounting vfs");
     let (upper, lowers, work, mount) = tree.overlayfs_spec();
+
     trace!("upper: {upper}");
     trace!("lower: {lowers:?}");
     trace!("work: {work}");
@@ -70,8 +71,12 @@ pub fn mount(tree: OVFSTree) -> Result<()> {
     for lower in lowers {
         fsconfig_set_string(fd.as_fd(), "lowerdir+", lower)?;
     }
-    fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
-    fsconfig_set_string(fd.as_fd(), "workdir", work)?;
+
+    if !readonly {
+        fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
+        fsconfig_set_string(fd.as_fd(), "workdir", work)?;
+    }
+
     fsconfig_create(fd.as_fd())?;
 
     // mount it
