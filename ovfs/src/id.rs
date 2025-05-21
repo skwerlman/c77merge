@@ -1,7 +1,5 @@
-use rustix::{
-    process,
-    thread::{Gid, RawGid, RawUid, Uid},
-};
+use rustix::process;
+use rustix::thread::{Gid, RawGid, RawUid, Uid};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Id {

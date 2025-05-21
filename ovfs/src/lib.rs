@@ -1,18 +1,14 @@
 use std::{fs::File, io::Write, os::fd::AsFd};
 
-use ovfs::OVFSTree;
-use rustix::{
-    fs,
-    mount::{
-        FsMountFlags, FsOpenFlags, MountAttrFlags, MoveMountFlags, fsconfig_create,
-        fsconfig_set_string, fsmount, fsopen, move_mount,
-    },
-    thread::{self, UnshareFlags},
-};
+use rustix::fs;
+use rustix::mount::{FsMountFlags, FsOpenFlags, MountAttrFlags, MoveMountFlags};
+use rustix::mount::{fsconfig_create, fsconfig_set_string, fsmount, fsopen, move_mount};
+use rustix::thread::{self, UnshareFlags};
+use tracing::{debug, instrument, trace};
 
 pub use error::OVFSError;
 pub use id::Id;
-use tracing::{debug, instrument, trace};
+use ovfs::OVFSTree;
 
 mod error;
 mod id;
