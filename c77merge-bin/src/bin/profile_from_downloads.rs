@@ -222,6 +222,7 @@ fn mod_entry_from_md5_lookup(game_base: &Path, lookup: Md5LookupResult) -> ModIn
         fid,
         archive,
         unpacked,
+        ..Default::default()
     }
 }
 
