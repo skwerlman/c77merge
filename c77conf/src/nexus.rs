@@ -11,16 +11,6 @@ pub struct NexusConf {
     pub connect_timeout: u64,
     pub read_timeout: u64,
     pub timeout: u64,
-    #[serde(deserialize_with = "deserialize_nexus_cache")]
+    #[serde(deserialize_with = "crate::deserialize_path")]
     pub cache_path: PathBuf,
-}
-
-// override cache_path deserialization to expand path
-fn deserialize_nexus_cache<'de, D>(deserializer: D) -> Result<PathBuf, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    let path = PathBuf::from(s);
-    Ok(shellexpand::path::tilde(&path).into())
 }

@@ -110,3 +110,12 @@ pub fn get_mod_profile(
 
     Ok(profile)
 }
+
+pub(crate) fn deserialize_path<'de, D>(deserializer: D) -> std::result::Result<PathBuf, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    let path = PathBuf::from(s);
+    Ok(shellexpand::path::tilde(&path).into())
+}
