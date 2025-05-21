@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 use crate::Result;
@@ -16,12 +18,15 @@ pub struct Profile {
     pub description: String,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct ModInfo {
     pub id: u32,
     pub fid: u32,
     pub archive: String,
     pub unpacked: String,
+    #[serde(default, skip_serializing_if = "crate::empty_path")]
+    #[serde(deserialize_with = "crate::deserialize_path")]
+    pub child_dir: PathBuf,
 }
 
 impl ModProfile {

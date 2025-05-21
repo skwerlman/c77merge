@@ -119,3 +119,9 @@ where
     let path = PathBuf::from(s);
     Ok(shellexpand::path::tilde(&path).into())
 }
+
+// clippy gets mad about the pathbuf being passed by ref, but thats what serde does so we have to work with it
+#[allow(clippy::ptr_arg)]
+pub(crate) fn empty_path(path: &PathBuf) -> bool {
+    path.as_os_str().is_empty()
+}
