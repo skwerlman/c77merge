@@ -1,3 +1,4 @@
+use std::env::args_os;
 use std::fs::File;
 use std::path::PathBuf;
 use std::process::Command;
@@ -39,10 +40,10 @@ fn main() -> Result<()> {
 
     c77merge::header!();
 
-    trace!("raw args: {:?}", std::env::args_os());
     let main_span = trace_span!("main").entered();
 
     let cli_span = trace_span!("cli").entered();
+    trace!("raw args: {:?}", args_os());
     let cli = Cli::parse();
     trace!("cli: {cli:?}");
     cli_span.exit();
