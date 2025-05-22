@@ -68,6 +68,11 @@ fn main() -> Result<()> {
     trace!("profile: {profile:?}");
 
     let game_dir = get_game_dir(&settings, &game)?;
+
+    info!(
+        "Applying profile '{}' for {}",
+        &profile.profile.name, &game.name
+    );
     config_span.exit();
 
     let vfs_span = trace_span!("vfs").entered();
