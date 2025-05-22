@@ -6,8 +6,6 @@ use std::sync::Arc;
 use clap::Parser;
 use itertools::Itertools;
 use miette::{Result, miette};
-use ovfs::{Id, ovfs::OVFSTree};
-use ovfs::{mount, unshare};
 use tracing::{debug, info, instrument, trace, trace_span};
 use tracing_subscriber::fmt::{format, format::FmtSpan};
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
@@ -16,6 +14,8 @@ use acf::{AcfToken, AcfTokenStream, StructuredAcfTokenStream};
 use c77conf::game::Game;
 use c77conf::mod_profile::{ModInfo, ModProfile};
 use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
+use ovfs::{Id, ovfs::OVFSTree};
+use ovfs::{mount, unshare};
 
 #[derive(Parser, Debug, Clone)]
 struct Cli {
