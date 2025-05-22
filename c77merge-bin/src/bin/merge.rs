@@ -21,10 +21,8 @@ use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
 struct Cli {
     game: String,
     profile: String,
-    #[clap(required = true)]
-    command: String,
-    #[clap(raw = true, required = false)]
-    args: Vec<String>,
+    #[clap(raw = true, required = true)]
+    command: Vec<String>,
 }
 
 fn main() -> Result<()> {
@@ -92,7 +90,7 @@ fn main() -> Result<()> {
     enter_vfs(trees)?;
 
     let run_span = trace_span!("run_game").entered();
-    run_game(&cli.command, &cli.args)?;
+    run_game(&cli.command[0], &cli.command[1..])?;
     run_span.exit();
 
     vfs_span.exit();
