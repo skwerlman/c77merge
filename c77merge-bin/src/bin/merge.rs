@@ -37,9 +37,10 @@ fn main() -> Result<()> {
         .finish()
         .init();
 
-    let main_span = trace_span!("main").entered();
+    c77merge::header!();
 
     trace!("raw args: {:?}", std::env::args_os());
+    let main_span = trace_span!("main").entered();
 
     let cli_span = trace_span!("cli").entered();
     let cli = Cli::parse();
