@@ -1,6 +1,7 @@
 use std::{fs::create_dir_all, path::PathBuf};
 
 use serde::Deserialize;
+use tracing::{debug, instrument};
 
 use crate::{Configuration, Result};
 
@@ -38,11 +39,18 @@ impl Game {
         self.path.join(name).with_extension("toml")
     }
 
+    #[instrument(level = "trace", skip(self))]
     pub fn ensure_dirs(&self) -> Result<()> {
+        debug!("Checking mod files dir exists at {}", self.path.display());
         self.path.try_exists()?;
+
+        debug!("Ensuring dl dir exists: {}", self.download_dir().display());
         create_dir_all(self.download_dir())?;
+        debug!("Ensuring mods exists: {}", self.mods_dir().display());
         create_dir_all(self.mods_dir())?;
+        debug!("Ensuring upper exists: {}", self.overwrite_dir().display());
         create_dir_all(self.overwrite_dir())?;
+        debug!("Ensuring work dir exists: {}", self.work_dir().display());
         create_dir_all(self.work_dir())?;
         Ok(())
     }
