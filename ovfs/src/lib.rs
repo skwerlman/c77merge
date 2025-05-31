@@ -1,7 +1,7 @@
 use std::{fs::File, io::Write, os::fd::AsFd};
 
 use rustix::fs;
-use rustix::mount::{FsMountFlags, FsOpenFlags, MountAttrFlags, MoveMountFlags};
+use rustix::mount::{FsMountFlags, FsOpenFlags, MountAttrFlags, MoveMountFlags, fsconfig_set_flag};
 use rustix::mount::{fsconfig_create, fsconfig_set_string, fsmount, fsopen, move_mount};
 use rustix::thread::{self, UnshareFlags};
 use tracing::{debug, instrument, trace};
@@ -14,7 +14,7 @@ mod error;
 mod id;
 pub mod ovfs;
 
-type Result<T> = std::result::Result<T, OVFSError>;
+pub(crate) type Result<T> = std::result::Result<T, OVFSError>;
 
 // sets up a user namespace and returns who we used to be
 #[instrument(level = "trace")]
@@ -55,32 +55,43 @@ pub fn unshare(id: Id, with_mounts: bool) -> Result<Id> {
 }
 
 #[instrument(level = "trace", skip(tree))]
-pub fn mount(tree: OVFSTree, readonly: bool) -> Result<()> {
+pub fn mount(tree: OVFSTree, index: usize) -> Result<()> {
     debug!("mounting vfs");
-    let (upper, lowers, work, mount) = tree.overlayfs_spec();
 
-    trace!("upper: {upper}");
+    let (upper, lowers, work, mount) = tree.overlayfs_spec(index);
+
+    trace!("upper: {upper:?}");
     trace!("lower: {lowers:?}");
-    trace!("work: {work}");
-    trace!("mount: {mount}");
+    trace!("work: {work:?}");
+    trace!("mount: {mount:?}");
 
     trace!("fsopen");
     let fd = fsopen("overlay", FsOpenFlags::FSOPEN_CLOEXEC)?;
 
     // configure and create the overlay
-    trace!("fsconfig_set_string source");
+    trace!("fsconfig_set_string index off");
+    fsconfig_set_string(fd.as_fd(), "index", "off")?;
+    trace!("fsconfig_set_string xino off");
+    fsconfig_set_string(fd.as_fd(), "xino", "off")?;
+    trace!("fsconfig_set_string metacopy off");
+    fsconfig_set_string(fd.as_fd(), "metacopy", "off")?;
+    trace!("fsconfig_set_string redirect_dir off");
+    fsconfig_set_string(fd.as_fd(), "redirect_dir", "off")?;
+    trace!("fsconfig_set_string uuid null");
+    fsconfig_set_string(fd.as_fd(), "uuid", "null")?;
+    trace!("fsconfig_set_flag userxattr");
+    fsconfig_set_flag(fd.as_fd(), "userxattr")?;
+    trace!("fsconfig_set_string source overlay");
     fsconfig_set_string(fd.as_fd(), "source", "overlay")?;
     for lower in lowers {
-        trace!("fsconfig_set_string lowerdir+ {lower}");
+        trace!("fsconfig_set_string lowerdir+ {lower:?}");
         fsconfig_set_string(fd.as_fd(), "lowerdir+", lower)?;
     }
 
-    if !readonly {
-        trace!("fsconfig_set_string upperdir {upper}");
-        fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
-        trace!("fsconfig_set_string workdir {work}");
-        fsconfig_set_string(fd.as_fd(), "workdir", work)?;
-    }
+    trace!("fsconfig_set_string upperdir {upper:?}");
+    fsconfig_set_string(fd.as_fd(), "upperdir", upper)?;
+    trace!("fsconfig_set_string workdir {work:?}");
+    fsconfig_set_string(fd.as_fd(), "workdir", work)?;
 
     trace!("fsconfig_create");
     fsconfig_create(fd.as_fd())?;
@@ -99,7 +110,7 @@ pub fn mount(tree: OVFSTree, readonly: bool) -> Result<()> {
         mount_fd.as_fd(),
         "",
         fs::CWD,
-        mount.as_bytes(),
+        mount,
         MoveMountFlags::MOVE_MOUNT_F_EMPTY_PATH,
     )?;
 

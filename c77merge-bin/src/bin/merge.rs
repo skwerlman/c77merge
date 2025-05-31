@@ -1,6 +1,7 @@
 use std::env::args_os;
+use std::fmt::Debug;
 use std::fs::File;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::Arc;
 
@@ -13,7 +14,7 @@ use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 use acf::{AcfToken, AcfTokenStream, StructuredAcfTokenStream};
 use c77conf::game::Game;
-use c77conf::mod_profile::{ModInfo, ModProfile};
+use c77conf::mod_profile::ModProfile;
 use c77conf::{Configuration, get_games, get_main_config, get_mod_profile};
 use ovfs::{Id, ovfs::OVFSTree};
 use ovfs::{mount, unshare};
@@ -46,7 +47,7 @@ fn main() -> Result<()> {
     trace!("raw args: {:?}", args_os());
     let cli = Cli::parse();
     trace!("cli: {cli:?}");
-    cli_span.exit();
+    drop(cli_span.exit());
 
     let config_span = trace_span!("configs").entered();
     let settings: Arc<Configuration> = Arc::new(get_main_config()?);
@@ -73,7 +74,7 @@ fn main() -> Result<()> {
         "Applying profile '{}' for {}",
         &profile.profile.name, &game.name
     );
-    config_span.exit();
+    drop(config_span.exit());
 
     let vfs_span = trace_span!("vfs").entered();
 
@@ -89,20 +90,18 @@ fn main() -> Result<()> {
     let mut trees = Vec::new();
     for tgt in targets {
         debug!("building vfs tree for {tgt:?}");
-        trees.push(build_tree(&game, &profile, game_dir.join(&tgt), |m| {
-            m.child_dir == tgt
-        })?);
+        trees.push(build_tree(&game, &profile, &game_dir, &tgt)?);
     }
 
     enter_vfs(trees)?;
 
     let run_span = trace_span!("run_game").entered();
     run_game(&cli.command[0], &cli.command[1..])?;
-    run_span.exit();
+    drop(run_span.exit());
 
-    vfs_span.exit();
+    drop(vfs_span.exit());
 
-    main_span.exit();
+    drop(main_span.exit());
     Ok(())
 }
 
@@ -114,13 +113,14 @@ fn get_game_dir(settings: &Configuration, game: &Game) -> Result<PathBuf> {
         .clone()
         .join("root/steamapps/")
         .join(format!("appmanifest_{}.acf", game.steamid));
-    debug!("acf file for game: {acf_file:?}");
+    // debug!("acf file for game: {acf_file:?}");
 
+    let acf_span =
+        trace_span!("read_acf", acf_file = acf_file.to_string_lossy().as_ref()).entered();
     let acf_handle = File::open(acf_file).map_err(|e| miette!("ACF Read error: {e}"))?;
     let mut stream = StructuredAcfTokenStream::new(AcfTokenStream::new(acf_handle));
-    let path = vec!["AppState", "installdir"];
     stream
-        .select_path(&path)
+        .select_path(&vec!["AppState", "installdir"])
         .map_err(|e| miette!("ACF Parse error: {e}"))?;
     let installdir = match stream
         .expect_next()
@@ -130,6 +130,7 @@ fn get_game_dir(settings: &Configuration, game: &Game) -> Result<PathBuf> {
         Ok(t) => Err(miette!("ACF Parse error: Unexpected token: {t:?}")),
         Err(e) => Err(e),
     }?;
+    drop(acf_span.exit());
 
     let game_dir = settings
         .general
@@ -143,23 +144,36 @@ fn get_game_dir(settings: &Configuration, game: &Game) -> Result<PathBuf> {
     Ok(game_dir)
 }
 
-#[instrument(level = "trace", skip(game, profile, filter))]
+#[instrument(level = "trace", skip(game, profile))]
 fn build_tree(
     game: &Game,
     profile: &ModProfile,
-    mountpoint: PathBuf,
-    filter: impl Fn(&ModInfo) -> bool,
+    game_dir: &Path,
+    target: &Path,
 ) -> Result<OVFSTree> {
-    let overwrite = game.overwrite_dir();
-    let mut tree = OVFSTree::new(mountpoint.clone(), game.work_dir(), overwrite);
+    let mountpoint = game_dir.join(target);
 
-    // mods are added in order; 1st in config is topmost
-    for mod_ in &profile.mods {
-        if filter(mod_) {
-            let path = game.mods_dir().join(&mod_.unpacked);
-            tree.with_lower(path);
-        }
-    }
+    let lowers = (&profile.mods)
+        .into_iter()
+        .filter_map(|mod_| {
+            if mod_.child_dir == target {
+                Some(game.mods_dir().join(&mod_.unpacked))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let mut tree = OVFSTree::new(
+        // mountpoint
+        mountpoint.clone(),
+        // workdir
+        game.work_dir(),
+        // overwrite
+        game.overwrite_dir().join(target),
+        // lowers
+        lowers,
+    );
 
     // set lowest dir to the directory we are gonna shadow
     tree.with_lower(mountpoint);
@@ -172,10 +186,11 @@ fn enter_vfs(trees: Vec<OVFSTree>) -> Result<()> {
     debug!("entering vfs");
     let me = unshare(Id::root(), true)?;
 
-    let last_idx = trees.len() - 1;
+    // let last_idx = trees.len() - 1;
 
     for (index, tree) in trees.into_iter().enumerate() {
-        mount(tree, index != last_idx)?;
+        tree.ensure_dirs(index)?;
+        mount(tree, index)?;
     }
 
     let _fake_root = unshare(me, false)?;
