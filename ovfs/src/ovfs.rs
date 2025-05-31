@@ -32,6 +32,7 @@ impl OVFSTree {
             bottom.put_child(lower);
         } else {
             warn!("Lower directory does not exist: {}", lower.display());
+            warn!("Ignore this if the missing directory is inside a previous overlay");
         }
     }
 
