@@ -153,8 +153,9 @@ fn build_tree(
 ) -> Result<OVFSTree> {
     let mountpoint = game_dir.join(target);
 
-    let lowers = (&profile.mods)
-        .into_iter()
+    let lowers = profile
+        .mods
+        .iter()
         .filter_map(|mod_| {
             if mod_.child_dir == target {
                 Some(game.mods_dir().join(&mod_.unpacked))
