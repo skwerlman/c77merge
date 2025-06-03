@@ -9,7 +9,7 @@ use clap::Parser;
 use itertools::Itertools;
 use miette::{Result, miette};
 use tracing::{debug, info, instrument, trace, trace_span};
-use tracing_subscriber::fmt::{format, format::FmtSpan};
+use tracing_subscriber::fmt::format::FmtSpan;
 use tracing_subscriber::{EnvFilter, fmt, prelude::*};
 
 use acf::{AcfToken, AcfTokenStream, StructuredAcfTokenStream};
@@ -28,18 +28,7 @@ struct Cli {
 }
 
 fn main() -> Result<()> {
-    human_panic::setup_panic!();
-    let format = format::format().compact();
-    let filter = EnvFilter::try_from_env("C77_LOG").unwrap_or_else(|_| EnvFilter::new("debug"));
-
-    fmt()
-        .event_format(format)
-        .with_env_filter(filter)
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-        .finish()
-        .init();
-
-    c77merge::header!();
+    c77merge::init!();
 
     let main_span = trace_span!("main").entered();
 
