@@ -1,5 +1,3 @@
-#![feature(fn_traits)]
-
 use std::error::Error;
 use std::fmt::Write as _;
 use std::fs;
