@@ -1,19 +1,12 @@
 {
   "lsp": {
     "rust-analyzer": {
-      "cargo": {
-        "buildScripts": {
-          "enable": true
-        }
-      },
-      "procMacro": {
-        "enable": true
-      },
+      "enable_lsp_tasks": true,
       "initialization_options": {
         "check": {
-          "command": "clippy"
-        }
-      }
-    }
-  }
+          "command": "clippy",
+        },
+      },
+    },
+  },
 }

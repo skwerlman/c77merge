@@ -1,0 +1,6 @@
+[[game]]
+name = "C77 Test Game"
+path = "Test"
+aliases = ["test"]
+domain = "testingdomain"
+steamid = 0

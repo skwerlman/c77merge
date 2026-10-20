@@ -2,4 +2,38 @@
 package.edition = "2024"
 package.license = "MIT"
 resolver = "3"
-members = ['acf', "c77conf", 'c77merge', 'c77merge-bin', 'nexusapi', 'ovfs']
+members = [
+    "bins/merge",
+    "bins/nexus_download",
+    "bins/profile_from_downloads",
+    "bins/updatemods",
+    "libs/acf",
+    "libs/c77conf",
+    "libs/libc77",
+    "libs/nexusapi",
+    "libs/ovfs"
+]
+
+[workspace.lints.clippy]
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+doc_markdown = "warn"
+match_wildcard_for_single_variants = "warn"
+perf = { level = "warn", priority = -1 }
+semicolon_if_nothing_returned = "warn"
+string_add_assign = "warn"
+style = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "deny"
+unnested_or_patterns = "warn"
+unused_self = "warn"
+used_underscore_binding = "warn"
+
+[profile.release]
+lto = "fat"
+# codegen-units = 1
+# incremental = false
+opt-level = 3
+# strip = "symbols"
+split-debuginfo = "packed"
+debug = "full"
